@@ -16,6 +16,11 @@ dist-ssr
 .nitro
 *.local
 
+# Environment variables — NEVER commit these
+.env
+.env.*
+!.env.example
+
 # Vercel build output (regenerated on every deploy)
 .vercel/output
 
