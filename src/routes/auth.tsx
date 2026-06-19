@@ -31,12 +31,44 @@ function AuthPage() {
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // Check if Supabase keys are missing to prevent client crash
+  const isConfigMissing = typeof window !== "undefined" && 
+    !import.meta.env.VITE_SUPABASE_URL && 
+    !import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+
   useEffect(() => {
+    if (isConfigMissing) return;
     const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
       if (session) navigate({ to: "/dashboard" });
     });
     return () => sub.subscription.unsubscribe();
-  }, [navigate]);
+  }, [navigate, isConfigMissing]);
+
+  if (isConfigMissing) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-mesh px-4 py-12">
+        <div className="w-full max-w-md">
+          <Card className="border-destructive/30 shadow-xl backdrop-blur-sm bg-card/95">
+            <CardHeader className="text-center pb-2">
+              <CardTitle className="text-2xl font-bold text-destructive">Configuration Error</CardTitle>
+              <CardDescription>
+                Client-side environment variables are missing.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4 pt-4">
+              <p className="text-sm text-muted-foreground text-center">
+                Please make sure you have added **both** of the following variables in your **Vercel Project Settings**, then click **Redeploy**:
+              </p>
+              <div className="bg-destructive/10 p-4 rounded-lg text-xs font-mono break-all space-y-2 border border-destructive/20">
+                <div><strong>VITE_SUPABASE_URL</strong>: {import.meta.env.VITE_SUPABASE_URL ? "✅ Set" : "❌ Missing (needs value starting with https://)"}</div>
+                <div><strong>VITE_SUPABASE_PUBLISHABLE_KEY</strong>: {import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ? "✅ Set" : "❌ Missing (needs token string)"}</div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
