@@ -66,11 +66,6 @@ export function AppSidebar() {
     },
   });
 
-  async function signOut() {
-    await supabase.auth.signOut();
-    toast.success("Signed out");
-  }
-
   const isActive = (to: string, exact?: boolean) =>
     exact ? location.pathname === to : location.pathname.startsWith(to);
 
@@ -157,7 +152,7 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
-        <Button variant="ghost" size="sm" className="justify-start" onClick={signOut}>
+        <Button variant="ghost" size="sm" className="justify-start" onClick={() => navigate({ to: "/logout" })}>
           <LogOut className="h-4 w-4 mr-2" /> Sign out
         </Button>
       </SidebarFooter>
