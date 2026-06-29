@@ -25,7 +25,10 @@ function Index() {
           </div>
           <span className="font-semibold tracking-tight">Digital Twin</span>
         </div>
-        <Link to="/auth"><Button variant="ghost">Sign in</Button></Link>
+        <div className="flex items-center gap-1">
+          <Link to="/contact"><Button variant="ghost">Contact</Button></Link>
+          <Link to="/auth"><Button variant="ghost">Sign in</Button></Link>
+        </div>
       </header>
       <main className="max-w-4xl mx-auto px-6 py-20 md:py-28 text-center">
         <p className="text-xs uppercase tracking-[0.2em] text-primary mb-4">Personal Growth Operating System</p>

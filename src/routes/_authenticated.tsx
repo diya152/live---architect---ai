@@ -16,8 +16,12 @@ export const Route = createFileRoute("/_authenticated")({
 function AuthenticatedLayout() {
   const navigate = useNavigate();
   useEffect(() => {
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
-      if (!session) navigate({ to: "/auth" });
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "PASSWORD_RECOVERY") {
+        navigate({ to: "/reset-password" });
+      } else if (!session) {
+        navigate({ to: "/auth" });
+      }
     });
     return () => sub.subscription.unsubscribe();
   }, [navigate]);

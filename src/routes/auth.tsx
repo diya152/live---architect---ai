@@ -25,7 +25,7 @@ export const Route = createFileRoute("/auth")({
 
 function AuthPage() {
   const navigate = useNavigate();
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [mode, setMode] = useState<"signin" | "signup" | "forgot">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
@@ -38,8 +38,12 @@ function AuthPage() {
 
   useEffect(() => {
     if (isConfigMissing) return;
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
-      if (session) navigate({ to: "/dashboard" });
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "PASSWORD_RECOVERY") {
+        navigate({ to: "/reset-password" });
+      } else if (session) {
+        navigate({ to: "/dashboard" });
+      }
     });
     return () => sub.subscription.unsubscribe();
   }, [navigate, isConfigMissing]);
@@ -85,6 +89,12 @@ function AuthPage() {
         });
         if (error) throw error;
         toast.success("Account created. Welcome.");
+      } else if (mode === "forgot") {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/reset-password`,
+        });
+        if (error) throw error;
+        toast.success("Password reset link sent to your email!");
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
@@ -105,11 +115,13 @@ function AuthPage() {
         </Link>
         <Card>
           <CardHeader>
-            <CardTitle>{mode === "signin" ? "Welcome back" : "Create your twin"}</CardTitle>
+            <CardTitle>{mode === "signin" ? "Welcome back" : mode === "signup" ? "Create your twin" : "Reset Password"}</CardTitle>
             <CardDescription>
               {mode === "signin"
                 ? "Continue your growth journey."
-                : "Spin up your personal growth operating system."}
+                : mode === "signup"
+                ? "Spin up your personal growth operating system."
+                : "Enter your email to receive a password reset link."}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -124,22 +136,35 @@ function AuthPage() {
                 <Label htmlFor="email">Email</Label>
                 <Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input id="password" type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} />
-              </div>
+              {mode !== "forgot" && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="password">Password</Label>
+                    {mode === "signin" && (
+                      <button
+                        type="button"
+                        onClick={() => setMode("forgot")}
+                        className="text-xs text-primary hover:underline font-medium animate-fade-in"
+                      >
+                        Forgot password?
+                      </button>
+                    )}
+                  </div>
+                  <Input id="password" type="password" required={mode !== "forgot"} minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} />
+                </div>
+              )}
               <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? "Please wait..." : mode === "signin" ? "Sign in" : "Create account"}
+                {loading ? "Please wait..." : mode === "signin" ? "Sign in" : mode === "signup" ? "Create account" : "Send reset link"}
               </Button>
             </form>
             <p className="mt-6 text-center text-sm text-muted-foreground">
-              {mode === "signin" ? "New here?" : "Already have an account?"}{" "}
+              {mode === "signin" ? "New here?" : mode === "signup" ? "Already have an account?" : "Remember your password?"}{" "}
               <button
                 type="button"
                 className="text-primary hover:underline font-medium"
-                onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
+                onClick={() => setMode(mode === "forgot" ? "signin" : (mode === "signin" ? "signup" : "signin"))}
               >
-                {mode === "signin" ? "Create account" : "Sign in"}
+                {mode === "forgot" ? "Sign in" : (mode === "signin" ? "Create account" : "Sign in")}
               </button>
             </p>
           </CardContent>
